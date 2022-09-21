@@ -5,7 +5,7 @@
 #OBJCOPY=${COMPILER}objcopy
 #ARCH = x86
 
-INCDIRS  += -I ${NAMMATESTAPP_PATH}/src
+INCDIRS  += -I ${NAMMATESTAPP_PATH}/src -I ${DIO_PATH}/api
 
 LDFLAGS  += -g
 CFLAGS   += -Werror ${INCDIRS} -g
