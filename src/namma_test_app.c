@@ -6,6 +6,7 @@
 #include <board.h>
 
 #include <Dio.h>
+#include <Spi.h>
 
 
 
@@ -119,10 +120,9 @@ TASK(Task_A) {
 #endif
 #ifdef BOARD_RP2040
 		Dio_WriteChannel(25, STD_HIGH);
-		// SET_PAD_GPIO(25, 0);
-		// SET_GPIO_CTRL(25, ((0x3 << 12) | (0x2 << 8) | GPIO_FUNC_SIO));
-		// SIO_GPIO_OE |= 1 << 25;
-		// SIO_GPIO_OUT &= ~(1 << 25);
+		if (E_NOT_OK == Spi_SyncTransmit(SEQ_ENUM_ETHERNET_CMD)) {
+			pr_log("Spi Sync Transmit Failure!");
+		}
 #endif
 		SetEvent(1, 0x101);
 		pr_log("Task A: Triggered event for Task B\n");
@@ -141,10 +141,6 @@ TASK(Task_A) {
 #endif
 #ifdef BOARD_RP2040
 		Dio_WriteChannel(25, STD_LOW);
-		// SET_PAD_GPIO(25, 0);
-		// SET_GPIO_CTRL(25, ((0x3 << 12) | (0x3 << 8) | GPIO_FUNC_SIO));
-		// SIO_GPIO_OE |= 1 << 25;
-		// SIO_GPIO_OUT |= 1 << 25;
 #endif
 		#ifdef GET_RELEASE_RESOURCE_TEST
 		pr_log("Task A Priority = %d\n", _OsTaskCtrlBlk[_OsCurrentTask.id].ceil_prio);
