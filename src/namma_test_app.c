@@ -121,7 +121,7 @@ TASK(Task_A) {
 #ifdef BOARD_RP2040
 		Dio_WriteChannel(25, STD_HIGH);
 		if (E_NOT_OK == Spi_SyncTransmit(SEQ_ENUM_ETHERNET_CMD)) {
-			pr_log("Spi Sync Transmit Failure!");
+			pr_log("Spi Sync Transmit Failure!\n");
 		}
 #endif
 		SetEvent(1, 0x101);
