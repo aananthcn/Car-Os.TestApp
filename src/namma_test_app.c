@@ -7,6 +7,7 @@
 
 #include <Dio.h>
 #include <Spi.h>
+#include <macphy.h>
 
 
 
@@ -101,7 +102,6 @@ TASK(Task_A) {
 
 	static bool toggle_bit;
 	EventMaskType Event = 0;
-	u8 spi_data[3];
 
 #ifdef ENABLE_DISABLE_ISR_TEST
 	DisableAllInterrupts();
@@ -121,26 +121,7 @@ TASK(Task_A) {
 #endif
 #ifdef BOARD_RP2040
 		Dio_WriteChannel(25, STD_HIGH);
-
-		// read location 0x00 == ERDPTL (reset value = 0xfa)
-		spi_data[0] = 0x00;
-		Spi_WriteIB(0, (const u8*)spi_data);
-		pr_log("Spi Tx data: 0x%02x\n", spi_data[0]);
-		if (E_NOT_OK == Spi_SyncTransmit(SEQ_ETH_2_BYTE)) {
-			pr_log("Spi Sync Transmit Failure!\n");
-		}
-		Spi_ReadIB(1, spi_data);
-		pr_log("Spi Rx data: 0x%02x\n", spi_data[0]);
-
-		// read location 0x01 == ERDPTH (reset value = 0x05)
-		spi_data[0] = 0x01;
-		Spi_WriteIB(0, (const u8*)spi_data);
-		pr_log("Spi Tx data: 0x%02x\n", spi_data[0]);
-		if (E_NOT_OK == Spi_SyncTransmit(SEQ_ETH_2_BYTE)) {
-			pr_log("Spi Sync Transmit Failure!\n");
-		}
-		Spi_ReadIB(1, spi_data);
-		pr_log("Spi Rx data: 0x%02x\n", spi_data[0]);
+		macphy_init();
 #endif
 		SetEvent(1, 0x101);
 		pr_log("Task A: Triggered event for Task B\n");

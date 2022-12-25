@@ -40,9 +40,11 @@ INCDIRS  += -I ${NammaTestApp_path}/src \
 	    -I ${OS_BUILDER_PATH}/src \
 	    -I ${DIO_PATH}/api \
 	    -I ${SPI_PATH}/api \
-	    -I ${SPI_PATH}/cfg
+	    -I ${SPI_PATH}/cfg \
+	    -I ${ETH_PATH}/src/macphy
 
 
+$(info  )
 $(info compiling NammaTestApp source files)
 
 
