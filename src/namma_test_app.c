@@ -121,7 +121,8 @@ TASK(Task_A) {
 #endif
 #ifdef BOARD_RP2040
 		Dio_WriteChannel(25, STD_HIGH);
-		macphy_init();
+		const uint8 mac_addres[] = {0x00, 0x00, 0x5e, 0x00, 0x53, 0x00};
+		(void)macphy_init(mac_addres);
 #endif
 		SetEvent(1, 0x101);
 		pr_log("Task A: Triggered event for Task B\n");
