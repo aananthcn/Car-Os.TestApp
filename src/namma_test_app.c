@@ -24,6 +24,33 @@
 #include <os_task.h>
 /*#############*/
 
+
+void macphy_test(void) {
+	uint8 reg_data;
+
+	// ECON1 register tests
+	enc28j60_bitclr_reg(ECON1, 0x03);
+	reg_data = enc28j60_read_reg(ECON1);
+	pr_log("ECON1 after bit clr: 0x%02x\n", reg_data);
+	enc28j60_write_reg(ECON1, 0x00);
+	reg_data = enc28j60_read_reg(ECON1);
+	pr_log("ECON1 after write: 0x%02x\n", reg_data);
+	enc28j60_bitset_reg(ECON1, 0x03);
+	reg_data = enc28j60_read_reg(ECON1);
+	pr_log("ECON1 after bit set: 0x%02x\n", reg_data);
+
+	// other register tests
+	reg_data = enc28j60_read_reg(ERDPTL);
+	pr_log("ERDPTL: 0x%02x\n", reg_data);
+	reg_data = enc28j60_read_reg(ERDPTH);
+	pr_log("ERDPTH: 0x%02x\n", reg_data);
+	reg_data = enc28j60_read_reg(EREVID);
+	pr_log("EREVID: 0x%02x\n", reg_data);
+	reg_data = enc28j60_read_reg(ECOCON);
+	pr_log("ECOCON: 0x%02x\n", reg_data);
+}
+
+
 TASK(Task_A) {
 	AlarmBaseType info;
 	TickType tick_left;
@@ -121,8 +148,7 @@ TASK(Task_A) {
 #endif
 #ifdef BOARD_RP2040
 		Dio_WriteChannel(25, STD_HIGH);
-		const uint8 mac_addres[] = {0x00, 0x00, 0x5e, 0x00, 0x53, 0x00};
-		(void)macphy_init(mac_addres);
+		macphy_test();
 #endif
 		SetEvent(1, 0x101);
 		pr_log("Task A: Triggered event for Task B\n");
