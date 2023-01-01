@@ -26,6 +26,7 @@
 
 
 void macphy_test(void) {
+	uint16 phy_reg;
 	uint8 reg_data;
 
 	// ECON1 register tests
@@ -48,6 +49,14 @@ void macphy_test(void) {
 	pr_log("EREVID: 0x%02x\n", reg_data);
 	reg_data = enc28j60_read_reg(ECOCON);
 	pr_log("ECOCON: 0x%02x\n", reg_data);
+
+	// phy register tests
+	phy_reg = enc28j60_read_phy(PHID1);
+	pr_log("PHID1: 0x%04x\n", phy_reg);
+	phy_reg = enc28j60_read_phy(PHID2);
+	pr_log("PHID2: 0x%04x\n", phy_reg);
+	phy_reg = enc28j60_read_phy(PHSTAT1);
+	pr_log("PHSTAT1: 0x%04x\n", phy_reg);
 }
 
 
