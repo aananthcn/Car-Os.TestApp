@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+
 #include <osek.h>
 #include <os_api.h>
 
@@ -7,6 +9,8 @@
 
 #include <Dio.h>
 #include <Spi.h>
+
+#include <Eth.h>
 #include <macphy.h>
 
 
@@ -25,10 +29,35 @@
 /*#############*/
 
 
+#define ETH_DATA_SZ 14
+void send_arp_pkt(void) {
+	const uint8 brdcst_a[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+	uint8 eth_data[ETH_DATA_SZ];
+	int i, j;
+
+	// destination mac address
+	for (i = 0; i < 6; i++) {
+		eth_data[i] = brdcst_a[i];
+	}
+
+	// source mac address
+	for (j = 0; j < 6; j++) {
+		eth_data[i+j] = EthConfigs[0].ctrlcfg.mac_addres[j];
+	}
+	i += j;
+
+	eth_data[i++] = 0x08; // ARP type = 0x0806
+	eth_data[i++] = 0x06; // ARP type = 0x0806
+
+	macphy_pkt_send((uint8*)eth_data, ETH_DATA_SZ);
+}
+
+
 void macphy_test(void) {
 	uint16 phy_reg;
 	uint8 reg_data;
 
+#if defined BITOPS_TEST
 	// ECON1 register tests
 	enc28j60_bitclr_reg(ECON1, 0x03);
 	reg_data = enc28j60_read_reg(ECON1);
@@ -39,24 +68,27 @@ void macphy_test(void) {
 	enc28j60_bitset_reg(ECON1, 0x03);
 	reg_data = enc28j60_read_reg(ECON1);
 	pr_log("ECON1 after bit set: 0x%02x\n", reg_data);
+#endif
+	// Status register read
+	reg_data = enc28j60_read_reg(ESTAT);
+	pr_log("ESTAT: 0x%02x\n", reg_data);
+	reg_data = enc28j60_read_reg(EIR);
+	pr_log("EIR: 0x%02x\n", reg_data);
 
 	// other register tests
 	reg_data = enc28j60_read_reg(ERDPTL);
 	pr_log("ERDPTL: 0x%02x\n", reg_data);
 	reg_data = enc28j60_read_reg(ERDPTH);
 	pr_log("ERDPTH: 0x%02x\n", reg_data);
-	reg_data = enc28j60_read_reg(EREVID);
-	pr_log("EREVID: 0x%02x\n", reg_data);
 	reg_data = enc28j60_read_reg(ECOCON);
 	pr_log("ECOCON: 0x%02x\n", reg_data);
 
 	// phy register tests
-	phy_reg = enc28j60_read_phy(PHID1);
-	pr_log("PHID1: 0x%04x\n", phy_reg);
-	phy_reg = enc28j60_read_phy(PHID2);
-	pr_log("PHID2: 0x%04x\n", phy_reg);
 	phy_reg = enc28j60_read_phy(PHSTAT1);
 	pr_log("PHSTAT1: 0x%04x\n", phy_reg);
+
+	// mem read / write tests
+	send_arp_pkt();
 }
 
 

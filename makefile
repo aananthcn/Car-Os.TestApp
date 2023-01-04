@@ -41,6 +41,8 @@ INCDIRS  += -I ${NammaTestApp_path}/src \
 	    -I ${DIO_PATH}/api \
 	    -I ${SPI_PATH}/api \
 	    -I ${SPI_PATH}/cfg \
+	    -I ${ETH_PATH}/api \
+	    -I ${ETH_PATH}/cfg \
 	    -I ${ETH_PATH}/src/macphy
 
 
