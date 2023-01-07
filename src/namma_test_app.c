@@ -56,6 +56,7 @@ void send_arp_pkt(void) {
 #define RECV_PKT_SZ	(1522)
 void macphy_test(void) {
 	uint16 phy_reg;
+	uint16 rx_dlen;
 	uint8 reg_data;
 	uint8 eth_data[RECV_PKT_SZ];
 
@@ -91,7 +92,10 @@ void macphy_test(void) {
 
 	// mem read / write tests
 	send_arp_pkt();
-	macphy_pkt_recv(eth_data, RECV_PKT_SZ);
+	rx_dlen = macphy_pkt_recv(eth_data, RECV_PKT_SZ);
+	if (0 < rx_dlen) {
+		pr_log("Received a new Eth packet with size = %d\n", rx_dlen);
+	}
 }
 
 
