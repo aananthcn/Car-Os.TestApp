@@ -29,10 +29,10 @@
 /*#############*/
 
 
-#define ETH_DATA_SZ 14
+#define ARP_PKT_SZ 14
 void send_arp_pkt(void) {
 	const uint8 brdcst_a[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-	uint8 eth_data[ETH_DATA_SZ];
+	uint8 eth_data[ARP_PKT_SZ];
 	int i, j;
 
 	// destination mac address
@@ -49,13 +49,15 @@ void send_arp_pkt(void) {
 	eth_data[i++] = 0x08; // ARP type = 0x0806
 	eth_data[i++] = 0x06; // ARP type = 0x0806
 
-	macphy_pkt_send((uint8*)eth_data, ETH_DATA_SZ);
+	macphy_pkt_send((uint8*)eth_data, ARP_PKT_SZ);
 }
 
 
+#define RECV_PKT_SZ	(1522)
 void macphy_test(void) {
 	uint16 phy_reg;
 	uint8 reg_data;
+	uint8 eth_data[RECV_PKT_SZ];
 
 #if defined BITOPS_TEST
 	// ECON1 register tests
@@ -89,6 +91,7 @@ void macphy_test(void) {
 
 	// mem read / write tests
 	send_arp_pkt();
+	macphy_pkt_recv(eth_data, RECV_PKT_SZ);
 }
 
 
