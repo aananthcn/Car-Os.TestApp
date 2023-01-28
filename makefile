@@ -43,7 +43,9 @@ INCDIRS  += -I ${NammaTestApp_path}/src \
 	    -I ${SPI_PATH}/cfg \
 	    -I ${ETH_PATH}/api \
 	    -I ${ETH_PATH}/cfg \
-	    -I ${ETH_PATH}/src/macphy
+	    -I ${ETH_PATH}/src/macphy \
+	    -I ${TCPIP_PATH}/api \
+	    -I ${TCPIP_PATH}/cfg
 
 
 $(info  )
@@ -52,6 +54,8 @@ $(info compiling NammaTestApp source files)
 
 APP_OBJS := \
 	${NammaTestApp_path}/src/namma_test_app.o \
+	${NammaTestApp_path}/src/ethernet_test_app.o
+
 
 LDFLAGS := -g -relocatable
 CFLAGS  := -Werror ${INCDIRS} -g
