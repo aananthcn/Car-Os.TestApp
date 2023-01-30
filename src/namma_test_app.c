@@ -90,12 +90,14 @@ void macphy_test(void) {
 	phy_reg = enc28j60_read_phy(PHSTAT1);
 	pr_log("PHSTAT1: 0x%04x\n", phy_reg);
 
+#if ETH_LOW_LEVEL_SEND_RECV_TEST
 	// mem read / write tests
 	send_arp_pkt();
 	rx_dlen = macphy_pkt_recv(eth_data, RECV_PKT_SZ);
 	if (0 < rx_dlen) {
-		pr_log("Received a new Eth packet with size = %d\n", rx_dlen);
+		pr_log("TEST: Received a new Eth packet with size = %d\n", rx_dlen);
 	}
+#endif
 }
 
 
