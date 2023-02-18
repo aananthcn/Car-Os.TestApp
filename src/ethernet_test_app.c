@@ -31,4 +31,5 @@
 // Called by Os for every 100 ms
 TASK(Ethernet_Tasks) {
 	TcpIp_MainFunction();
+	macphy_periodic_fn();
 }

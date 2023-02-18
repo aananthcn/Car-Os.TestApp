@@ -14,6 +14,8 @@
 #include <macphy.h>
 
 
+// #define OSEK_TASK_DEBUG	1
+// #define ENC28J60_DEBUG	1
 
 #define GETEVENT_TEST
 //#define GET_RELEASE_RESOURCE_TEST
@@ -64,32 +66,51 @@ void macphy_test(void) {
 	// ECON1 register tests
 	enc28j60_bitclr_reg(ECON1, 0x03);
 	reg_data = enc28j60_read_reg(ECON1);
+ #ifdef ENC28J60_DEBUG
 	pr_log("ECON1 after bit clr: 0x%02x\n", reg_data);
+ #endif
 	enc28j60_write_reg(ECON1, 0x00);
 	reg_data = enc28j60_read_reg(ECON1);
+ #ifdef ENC28J60_DEBUG
 	pr_log("ECON1 after write: 0x%02x\n", reg_data);
+ #endif
 	enc28j60_bitset_reg(ECON1, 0x03);
 	reg_data = enc28j60_read_reg(ECON1);
+ #ifdef ENC28J60_DEBUG
 	pr_log("ECON1 after bit set: 0x%02x\n", reg_data);
+ #endif
 #endif
 	// Status register read
 	reg_data = enc28j60_read_reg(ESTAT);
+ #ifdef ENC28J60_DEBUG
 	pr_log("ESTAT: 0x%02x\n", reg_data);
+ #endif
 	reg_data = enc28j60_read_reg(EIR);
+ #ifdef ENC28J60_DEBUG
 	pr_log("EIR: 0x%02x\n", reg_data);
+ #endif
 
 	// other register tests
 	reg_data = enc28j60_read_reg(ERDPTL);
+ #ifdef ENC28J60_DEBUG
 	pr_log("ERDPTL: 0x%02x\n", reg_data);
+ #endif
 	reg_data = enc28j60_read_reg(ERDPTH);
+ #ifdef ENC28J60_DEBUG
 	pr_log("ERDPTH: 0x%02x\n", reg_data);
+ #endif
 	reg_data = enc28j60_read_reg(ECOCON);
+ #ifdef ENC28J60_DEBUG
 	pr_log("ECOCON: 0x%02x\n", reg_data);
+ #endif
 
 	// phy register tests
 	phy_reg = enc28j60_read_phy(PHSTAT1);
+ #ifdef ENC28J60_DEBUG
 	pr_log("PHSTAT1: 0x%04x\n", phy_reg);
+ #endif
 
+#define ETH_LOW_LEVEL_SEND_RECV_TEST 0
 #if ETH_LOW_LEVEL_SEND_RECV_TEST
 	// mem read / write tests
 	send_arp_pkt();
@@ -105,7 +126,9 @@ TASK(Task_A) {
 	AlarmBaseType info;
 	TickType tick_left;
 	static bool cycle_started = false;
+#ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
+#endif
 
 #ifdef ALARM_BASE_TEST
 	if (E_OK == GetAlarmBase(0, &info))
@@ -201,9 +224,13 @@ TASK(Task_A) {
 		macphy_test();
 #endif
 		SetEvent(1, 0x101);
+#ifdef OSEK_TASK_DEBUG
 		pr_log("Task A: Triggered event for Task B\n");
+#endif
 		GetEvent(1, &Event);
+#ifdef OSEK_TASK_DEBUG
 		pr_log("Task A: Event = 0x%016X\n", Event);
+#endif
 		#ifdef GET_RELEASE_RESOURCE_TEST
 		pr_log("Task A Priority = %d\n", _OsTaskCtrlBlk[_OsCurrentTask.id].ceil_prio);
 		ReleaseResource(RES(mutex1));
@@ -230,7 +257,9 @@ TASK(Task_A) {
 
 
 TASK(Task_B) {
+#ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
+#endif
 #ifdef CANCEL_ALARM
 	static int i = 10;
 	if (i-- <= 0) 
@@ -247,8 +276,10 @@ TASK(Task_B) {
 	EventMaskType Event = 0;
 	ClearEvent(1);
 	GetEvent(1, &Event);
+#ifdef OSEK_TASK_DEBUG
 	pr_log("Task B: Event = 0x%016X\n", Event);
-#endif
+#endif // OSEK_TASK_DEBUG
+#endif // GETEVENT_TEST
 	static bool toggle_bit;
 	if (toggle_bit) {
 		toggle_bit = false;
@@ -268,16 +299,22 @@ TASK(Task_B) {
 
 
 TASK(Task_C) {
+#ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
+#endif
 }
 
 
 
 void Alarm_uSecAlarm_callback(void) {
+#ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
+#endif
 }
 
 
 TASK(Task_D) {
+#ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
+#endif
 }
