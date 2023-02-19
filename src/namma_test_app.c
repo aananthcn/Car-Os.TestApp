@@ -80,35 +80,6 @@ void macphy_test(void) {
 	pr_log("ECON1 after bit set: 0x%02x\n", reg_data);
  #endif
 #endif
-	// Status register read
-	reg_data = enc28j60_read_reg(ESTAT);
- #ifdef ENC28J60_DEBUG
-	pr_log("ESTAT: 0x%02x\n", reg_data);
- #endif
-	reg_data = enc28j60_read_reg(EIR);
- #ifdef ENC28J60_DEBUG
-	pr_log("EIR: 0x%02x\n", reg_data);
- #endif
-
-	// other register tests
-	reg_data = enc28j60_read_reg(ERDPTL);
- #ifdef ENC28J60_DEBUG
-	pr_log("ERDPTL: 0x%02x\n", reg_data);
- #endif
-	reg_data = enc28j60_read_reg(ERDPTH);
- #ifdef ENC28J60_DEBUG
-	pr_log("ERDPTH: 0x%02x\n", reg_data);
- #endif
-	reg_data = enc28j60_read_reg(ECOCON);
- #ifdef ENC28J60_DEBUG
-	pr_log("ECOCON: 0x%02x\n", reg_data);
- #endif
-
-	// phy register tests
-	phy_reg = enc28j60_read_phy(PHSTAT1);
- #ifdef ENC28J60_DEBUG
-	pr_log("PHSTAT1: 0x%04x\n", phy_reg);
- #endif
 
 #define ETH_LOW_LEVEL_SEND_RECV_TEST 0
 #if ETH_LOW_LEVEL_SEND_RECV_TEST
