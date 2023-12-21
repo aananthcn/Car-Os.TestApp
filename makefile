@@ -26,11 +26,14 @@ RANLIB=${COMPILER}ranlib
 OBJCOPY=${COMPILER}objcopy
 
 
-include ${ROOT_DIR}/app_paths.mk
-include ${ROOT_DIR}/path_defs.mk
+include ${CAR_OS_PATH}/app_paths.mk
+include ${CAR_OS_PATH}/path_defs.mk
 
 
-INCDIRS  += -I ${Car_OS_TestApp_path}/src \
+INCDIRS  += -I ${Car_Os_TestApp_path}/src \
+	    -I ${CAR_OS_INC_PATH}/autosar \
+	    -I ${CAR_OS_INC_PATH}/car_os \
+	    -I ${CAR_OS_BOARD_PATH} \
 	    -I ${OS_PATH}/include \
 	    -I ${MCU_PATH}/src \
 	    -I ${MCU_PATH}/src/common \
@@ -52,8 +55,8 @@ $(info compiling Car_OS_TestApp source files)
 
 
 APP_OBJS := \
-	${Car_OS_TestApp_path}/src/namma_test_app.o \
-	${Car_OS_TestApp_path}/src/ethernet_test_app.o
+	${Car_Os_TestApp_path}/src/namma_test_app.o \
+	${Car_Os_TestApp_path}/src/ethernet_test_app.o
 
 
 LDFLAGS := -g -relocatable
@@ -61,7 +64,7 @@ CFLAGS  := -Werror ${INCDIRS} -g
 ASFLAGS := ${INCDIRS} -g
 TARGET 	:= libCar_OS_TestApp.la
 # include c_l_flags.mk to add more definitions specific to micro-controller
-include ${ROOT_DIR}/c_l_flags.mk
+include ${CAR_OS_PATH}/c_l_flags.mk
 
 all: $(TARGET)
 
