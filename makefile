@@ -30,13 +30,12 @@ include ${ROOT_DIR}/app_paths.mk
 include ${ROOT_DIR}/path_defs.mk
 
 
-INCDIRS  += -I ${NammaTestApp_path}/src \
+INCDIRS  += -I ${Car_OS_TestApp_path}/src \
 	    -I ${OS_PATH}/include \
 	    -I ${MCU_PATH}/src \
 	    -I ${MCU_PATH}/src/common \
 	    -I ${MCU_PATH}/src/common/api \
 	    -I ${MCU_PATH}/src/common/src \
-	    -I ${MCU_STARTUP_PATH} \
 	    -I ${OS_BUILDER_PATH}/src \
 	    -I ${DIO_PATH}/api \
 	    -I ${SPI_PATH}/api \
@@ -49,18 +48,18 @@ INCDIRS  += -I ${NammaTestApp_path}/src \
 
 
 $(info  )
-$(info compiling NammaTestApp source files)
+$(info compiling Car_OS_TestApp source files)
 
 
 APP_OBJS := \
-	${NammaTestApp_path}/src/namma_test_app.o \
-	${NammaTestApp_path}/src/ethernet_test_app.o
+	${Car_OS_TestApp_path}/src/namma_test_app.o \
+	${Car_OS_TestApp_path}/src/ethernet_test_app.o
 
 
 LDFLAGS := -g -relocatable
 CFLAGS  := -Werror ${INCDIRS} -g
 ASFLAGS := ${INCDIRS} -g
-TARGET 	:= libNammaTestApp.la
+TARGET 	:= libCar_OS_TestApp.la
 # include c_l_flags.mk to add more definitions specific to micro-controller
 include ${ROOT_DIR}/c_l_flags.mk
 
