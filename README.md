@@ -1,2 +1,2 @@
-# NammaTestApp
-This app is for testing NammaAUTOSAR
+# Car-OS Test Application
+This app is for testing Car-OS, the classic AUTOSAR OS.
