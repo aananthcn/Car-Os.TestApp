@@ -13,6 +13,10 @@
 #include <Eth.h>
 #include <macphy.h>
 
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(namma_test_app, LOG_LEVEL_DBG);
 
 // #define OSEK_TASK_DEBUG	1
 // #define ENC28J60_DEBUG	1
@@ -180,18 +184,12 @@ TASK(Task_A) {
 	EnableAllInterrupts();
 #endif
 
-#ifdef BOARD_STM32F407VET6
-	// Test code - turn on/off LED D2 & D3 on the board
-	GPIOA_MODER |= ((1 << 14) | (1 << 12)); // LED - PA7, PA6: GPIO mode
-#endif
-
 	if (toggle_bit) {
 		toggle_bit = false;
-#ifdef BOARD_STM32F407VET6
-		GPIOA_ODR |= 0x40;
-#endif
-#ifdef BOARD_RP2040
+#ifdef AUTOSAR_DIO_TEST
 		Dio_WriteChannel(25, STD_HIGH);
+#endif
+#ifdef ETHERNET_TEST
 		macphy_test();
 #endif
 		SetEvent(1, 0x101);
@@ -210,17 +208,15 @@ TASK(Task_A) {
 	}
 	else {
 		toggle_bit = true;
-#ifdef BOARD_STM32F407VET6
-		GPIOA_ODR &= ~(0x40);
-#endif
-#ifdef BOARD_RP2040
+		printf("Task A toggle_bit set\n");
+#ifdef AUTOSAR_DIO_TEST
 		Dio_WriteChannel(25, STD_LOW);
 #endif
-		#ifdef GET_RELEASE_RESOURCE_TEST
+#ifdef GET_RELEASE_RESOURCE_TEST
 		pr_log("Task A Priority = %d\n", _OsTaskCtrlBlk[_OsCurrentTask.id].ceil_prio);
 		GetResource(RES(mutex1));
 		pr_log("Task A Priority = %d\n", _OsTaskCtrlBlk[_OsCurrentTask.id].ceil_prio);
-		#endif
+#endif
 	}
 #endif
 }
@@ -254,15 +250,10 @@ TASK(Task_B) {
 	static bool toggle_bit;
 	if (toggle_bit) {
 		toggle_bit = false;
-#ifdef BOARD_STM32F407VET6
-		GPIOA_ODR |= 0x80;
-#endif
 	}
 	else {
 		toggle_bit = true;
-#ifdef BOARD_STM32F407VET6
-		GPIOA_ODR &= ~(0x80);
-#endif
+		printf("Task B toggle_bit set\n");
 	}
 
 }
@@ -273,6 +264,7 @@ TASK(Task_C) {
 #ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
 #endif
+	LOG_DBG("Task C called!");
 }
 
 
@@ -288,4 +280,5 @@ TASK(Task_D) {
 #ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
 #endif
+	LOG_DBG("Task D called!");
 }

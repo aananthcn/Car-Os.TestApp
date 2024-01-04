@@ -33,7 +33,8 @@ include ${CAR_OS_PATH}/path_defs.mk
 INCDIRS  += -I ${Car_Os_TestApp_path}/src \
 	    -I ${CAR_OS_INC_PATH}/autosar \
 	    -I ${CAR_OS_INC_PATH}/car_os \
-	    -I ${CAR_OS_BOARD_PATH} \
+	    -I ${CAR_OS_BOARDSOC_PATH} \
+	    -I ${ZEPHYR_INC_Z_PATH} \
 	    -I ${OS_PATH}/include \
 	    -I ${MCU_PATH}/src \
 	    -I ${MCU_PATH}/src/common \
@@ -59,19 +60,27 @@ APP_OBJS := \
 	${Car_Os_TestApp_path}/src/ethernet_test_app.o
 
 
-LDFLAGS := -g -relocatable
-CFLAGS  := -Werror ${INCDIRS} -g
-ASFLAGS := ${INCDIRS} -g
-TARGET 	:= libCar_OS_TestApp.la
+# LDFLAGS := -g -relocatable
+# CFLAGS  := -Werror ${INCDIRS} -g
+# ASFLAGS := ${INCDIRS} -g
+TARGET 	:= libCar_OS_TestApp.a
 # include c_l_flags.mk to add more definitions specific to micro-controller
 include ${CAR_OS_PATH}/c_l_flags.mk
 
 all: $(TARGET)
 
+
+%.o: %.c
+	$(CC) -c ${CFLAGS} ${INCDIRS} $< -o $@
+
+
+
 LIB_OBJS := $(APP_OBJS)
 
 $(TARGET): $(LIB_OBJS)
-	$(LD) ${LDFLAGS} -o $@ $^
+	$(AR) -rcs ${TARGET} ${LIB_OBJS}
+
+#	$(LD) ${LDFLAGS} -o $@ $^
 
 clean:
 	$(RM) $(LIB_OBJS) $(TARGET)
