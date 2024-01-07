@@ -30,6 +30,8 @@
 
 // Called by Os for every 100 ms
 TASK(Ethernet_Tasks) {
+#if ETH_DRIVER_MAX_CHANNEL > 0
 	TcpIp_MainFunction();
 	macphy_periodic_fn();
+#endif
 }

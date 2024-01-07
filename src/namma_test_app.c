@@ -66,33 +66,36 @@ void macphy_test(void) {
 	uint8 reg_data;
 	uint8 eth_data[RECV_PKT_SZ];
 
-#if defined BITOPS_TEST
+
+#if ETH_DRIVER_MAX_CHANNEL > 0
+ #if defined BITOPS_TEST
 	// ECON1 register tests
 	enc28j60_bitclr_reg(ECON1, 0x03);
 	reg_data = enc28j60_read_reg(ECON1);
- #ifdef ENC28J60_DEBUG
+  #ifdef ENC28J60_DEBUG
 	pr_log("ECON1 after bit clr: 0x%02x\n", reg_data);
- #endif
+  #endif
 	enc28j60_write_reg(ECON1, 0x00);
 	reg_data = enc28j60_read_reg(ECON1);
- #ifdef ENC28J60_DEBUG
+  #ifdef ENC28J60_DEBUG
 	pr_log("ECON1 after write: 0x%02x\n", reg_data);
- #endif
+  #endif
 	enc28j60_bitset_reg(ECON1, 0x03);
 	reg_data = enc28j60_read_reg(ECON1);
- #ifdef ENC28J60_DEBUG
+  #ifdef ENC28J60_DEBUG
 	pr_log("ECON1 after bit set: 0x%02x\n", reg_data);
+  #endif
  #endif
-#endif
 
-#define ETH_LOW_LEVEL_SEND_RECV_TEST 0
-#if ETH_LOW_LEVEL_SEND_RECV_TEST
+ #define ETH_LOW_LEVEL_SEND_RECV_TEST 0
+ #if ETH_LOW_LEVEL_SEND_RECV_TEST
 	// mem read / write tests
 	send_arp_pkt();
 	rx_dlen = macphy_pkt_recv(eth_data, RECV_PKT_SZ);
 	if (0 < rx_dlen) {
 		pr_log("TEST: Received a new Eth packet with size = %d\n", rx_dlen);
 	}
+ #endif
 #endif
 }
 
@@ -185,10 +188,8 @@ TASK(Task_A) {
 #endif
 
 	if (toggle_bit) {
+		Dio_WriteChannel(16, STD_HIGH);
 		toggle_bit = false;
-#ifdef AUTOSAR_DIO_TEST
-		Dio_WriteChannel(25, STD_HIGH);
-#endif
 #ifdef ETHERNET_TEST
 		macphy_test();
 #endif
@@ -207,11 +208,9 @@ TASK(Task_A) {
 		#endif
 	}
 	else {
+		Dio_WriteChannel(16, STD_LOW);
 		toggle_bit = true;
 		printf("Task A toggle_bit set\n");
-#ifdef AUTOSAR_DIO_TEST
-		Dio_WriteChannel(25, STD_LOW);
-#endif
 #ifdef GET_RELEASE_RESOURCE_TEST
 		pr_log("Task A Priority = %d\n", _OsTaskCtrlBlk[_OsCurrentTask.id].ceil_prio);
 		GetResource(RES(mutex1));
@@ -249,9 +248,11 @@ TASK(Task_B) {
 #endif // GETEVENT_TEST
 	static bool toggle_bit;
 	if (toggle_bit) {
+		Dio_WriteChannel(17, STD_HIGH);
 		toggle_bit = false;
 	}
 	else {
+		Dio_WriteChannel(17, STD_LOW);
 		toggle_bit = true;
 		printf("Task B toggle_bit set\n");
 	}
@@ -264,6 +265,7 @@ TASK(Task_C) {
 #ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
 #endif
+	Dio_FlipChannel(18);
 	LOG_DBG("Task C called!");
 }
 
@@ -280,5 +282,6 @@ TASK(Task_D) {
 #ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
 #endif
+	Dio_FlipChannel(19);
 	LOG_DBG("Task D called!");
 }
