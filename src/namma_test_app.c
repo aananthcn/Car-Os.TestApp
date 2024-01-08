@@ -22,6 +22,7 @@ LOG_MODULE_REGISTER(namma_test_app, LOG_LEVEL_DBG);
 // #define ENC28J60_DEBUG	1
 
 #define GETEVENT_TEST
+#define EVENT_SET_CLEAR_TEST
 //#define GET_RELEASE_RESOURCE_TEST
 //#define SCHEDULE_TEST
 //#define TERMINATE_TASK_TEST
@@ -137,13 +138,6 @@ TASK(Task_A) {
 	SetAbsAlarm(1, 1, 1); // start at 5th sec and repeat every 1.5 sec
 #endif
 
-#ifdef EVENT_SET_CLEAR_TEST
-	static int setcnt = 4;
-	if (setcnt > 0) {
-		setcnt--;
-		SetEvent(1, 1);
-	}
-#endif
 
 
 #ifdef GETEVENT_TEST
@@ -193,28 +187,27 @@ TASK(Task_A) {
 #ifdef ETHERNET_TEST
 		macphy_test();
 #endif
-		SetEvent(1, 0x101);
 #ifdef OSEK_TASK_DEBUG
 		pr_log("Task A: Triggered event for Task B\n");
 #endif
-		GetEvent(1, &Event);
 #ifdef OSEK_TASK_DEBUG
 		pr_log("Task A: Event = 0x%016X\n", Event);
 #endif
 		#ifdef GET_RELEASE_RESOURCE_TEST
-		pr_log("Task A Priority = %d\n", _OsTaskCtrlBlk[_OsCurrentTask.id].ceil_prio);
+		pr_log("Task A Priority = %d\n", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
 		ReleaseResource(RES(mutex1));
-		pr_log("Task A Priority = %d\n", _OsTaskCtrlBlk[_OsCurrentTask.id].ceil_prio);
+		pr_log("Task A Priority = %d\n", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
 		#endif
 	}
 	else {
 		Dio_WriteChannel(16, STD_LOW);
+		SetEvent(TASK_TASK_C_ID, 0x101);
 		toggle_bit = true;
 		printf("Task A toggle_bit set\n");
 #ifdef GET_RELEASE_RESOURCE_TEST
-		pr_log("Task A Priority = %d\n", _OsTaskCtrlBlk[_OsCurrentTask.id].ceil_prio);
+		pr_log("Task A Priority = %d\n", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
 		GetResource(RES(mutex1));
-		pr_log("Task A Priority = %d\n", _OsTaskCtrlBlk[_OsCurrentTask.id].ceil_prio);
+		pr_log("Task A Priority = %d\n", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
 #endif
 	}
 #endif
@@ -232,6 +225,8 @@ TASK(Task_B) {
 		CancelAlarm(1);
 #endif
 #ifdef EVENT_SET_CLEAR_TEST
+	EventMaskType Event = 0;
+	GetEvent(TASK_TASK_B_ID, &Event);
 	ClearEvent(1);
 #endif
 #ifdef GETEVENT_TEST
@@ -239,9 +234,6 @@ TASK(Task_B) {
 #ifdef WAITEVENT_TEST
 	WaitEvent(2);
 #endif
-	EventMaskType Event = 0;
-	ClearEvent(1);
-	GetEvent(1, &Event);
 #ifdef OSEK_TASK_DEBUG
 	pr_log("Task B: Event = 0x%016X\n", Event);
 #endif // OSEK_TASK_DEBUG
@@ -264,6 +256,17 @@ TASK(Task_B) {
 TASK(Task_C) {
 #ifdef OSEK_TASK_DEBUG
 	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
+#endif
+#ifdef EVENT_SET_CLEAR_TEST
+	uint32_t Event = 1;
+	static int setcnt = 4;
+	if (setcnt > 0) {
+		setcnt--;
+	}
+	else {
+		SetEvent(TASK_TASK_B_ID, &Event);
+		setcnt = 4;
+	}
 #endif
 	Dio_FlipChannel(18);
 	LOG_DBG("Task C called!");
