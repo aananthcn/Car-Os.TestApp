@@ -74,17 +74,17 @@ void macphy_test(void) {
 	enc28j60_bitclr_reg(ECON1, 0x03);
 	reg_data = enc28j60_read_reg(ECON1);
   #ifdef ENC28J60_DEBUG
-	pr_log("ECON1 after bit clr: 0x%02x\n", reg_data);
+	LOG_DBG("ECON1 after bit clr: 0x%02x", reg_data);
   #endif
 	enc28j60_write_reg(ECON1, 0x00);
 	reg_data = enc28j60_read_reg(ECON1);
   #ifdef ENC28J60_DEBUG
-	pr_log("ECON1 after write: 0x%02x\n", reg_data);
+	LOG_DBG("ECON1 after write: 0x%02x", reg_data);
   #endif
 	enc28j60_bitset_reg(ECON1, 0x03);
 	reg_data = enc28j60_read_reg(ECON1);
   #ifdef ENC28J60_DEBUG
-	pr_log("ECON1 after bit set: 0x%02x\n", reg_data);
+	LOG_DBG("ECON1 after bit set: 0x%02x", reg_data);
   #endif
  #endif
 
@@ -94,7 +94,7 @@ void macphy_test(void) {
 	send_arp_pkt();
 	rx_dlen = macphy_pkt_recv(eth_data, RECV_PKT_SZ);
 	if (0 < rx_dlen) {
-		pr_log("TEST: Received a new Eth packet with size = %d\n", rx_dlen);
+		LOG_DBG("TEST: Received a new Eth packet with size = %d", rx_dlen);
 	}
  #endif
 #endif
@@ -105,22 +105,19 @@ TASK(Task_A) {
 	AlarmBaseType info;
 	TickType tick_left;
 	static bool cycle_started = false;
-#ifdef OSEK_TASK_DEBUG
-	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
-#endif
 
 #ifdef ALARM_BASE_TEST
 	if (E_OK == GetAlarmBase(0, &info))
-		pr_log("0: ticks/base = %d\n", info.ticksperbase);
+		LOG_DBG("0: ticks/base = %d", info.ticksperbase);
 	if (E_OK == GetAlarmBase(1, &info))
-		pr_log("1: ticks/base = %d\n", info.ticksperbase);
+		LOG_DBG("1: ticks/base = %d", info.ticksperbase);
 	if (E_OK == GetAlarmBase(2, &info))
-		pr_log("2: ticks/base = %d\n", info.ticksperbase);
+		LOG_DBG("2: ticks/base = %d", info.ticksperbase);
 #endif
 
 #ifdef GET_ALARM_TEST
 	if (E_OK == GetAlarm(0, &tick_left))
-		pr_log("0: ticks remaining = %d\n", tick_left);
+		LOG_DBG("0: ticks remaining = %d", tick_left);
 #endif
 
 #ifdef SET_REL_ALARM_TEST
@@ -163,13 +160,13 @@ TASK(Task_A) {
 	TaskStateType state;
 	GetTaskID(&task);
 	GetTaskState(task, &state);
-	pr_log("Current task: %d, state = %d\n", task, state);
+	LOG_DBG("Current task: %d, state = %d", task, state);
 	task = 1;
 	GetTaskState(task, &state);
-	pr_log("Task: %d, state = %d\n", task, state);
+	LOG_DBG("Task: %d, state = %d", task, state);
 	task = 2;
 	GetTaskState(task, &state);
-	pr_log("Task: %d, state = %d\n", task, state);
+	LOG_DBG("Task: %d, state = %d", task, state);
 #endif
 
 	static bool toggle_bit;
@@ -177,7 +174,7 @@ TASK(Task_A) {
 
 #ifdef ENABLE_DISABLE_ISR_TEST
 	DisableAllInterrupts();
-	pr_log("Enable / Disable ISR test\n");
+	LOG_DBG("Enable / Disable ISR test");
 	EnableAllInterrupts();
 #endif
 
@@ -188,26 +185,26 @@ TASK(Task_A) {
 		macphy_test();
 #endif
 #ifdef OSEK_TASK_DEBUG
-		pr_log("Task A: Triggered event for Task B\n");
+		LOG_DBG("Task A: Triggered event for Task B");
 #endif
 #ifdef OSEK_TASK_DEBUG
-		pr_log("Task A: Event = 0x%016X\n", Event);
+		LOG_DBG("Task A: Event = 0x%016X", Event);
 #endif
 		#ifdef GET_RELEASE_RESOURCE_TEST
-		pr_log("Task A Priority = %d\n", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
+		LOG_DBG("Task A Priority = %d", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
 		ReleaseResource(RES(mutex1));
-		pr_log("Task A Priority = %d\n", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
+		LOG_DBG("Task A Priority = %d", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
 		#endif
 	}
 	else {
 		Dio_WriteChannel(16, STD_LOW);
 		SetEvent(TASK_TASK_C_ID, 0x101);
 		toggle_bit = true;
-		printf("Task A toggle_bit set\n");
+		LOG_DBG("Task A toggle_bit set");
 #ifdef GET_RELEASE_RESOURCE_TEST
-		pr_log("Task A Priority = %d\n", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
+		LOG_DBG("Task A Priority = %d", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
 		GetResource(RES(mutex1));
-		pr_log("Task A Priority = %d\n", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
+		LOG_DBG("Task A Priority = %d", _OsTaskDataBlk[_OsCurrentTask.id].ceil_prio);
 #endif
 	}
 #endif
@@ -216,9 +213,6 @@ TASK(Task_A) {
 
 
 TASK(Task_B) {
-#ifdef OSEK_TASK_DEBUG
-	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
-#endif
 #ifdef CANCEL_ALARM
 	static int i = 10;
 	if (i-- <= 0) 
@@ -234,9 +228,6 @@ TASK(Task_B) {
 #ifdef WAITEVENT_TEST
 	WaitEvent(2);
 #endif
-#ifdef OSEK_TASK_DEBUG
-	pr_log("Task B: Event = 0x%016X\n", Event);
-#endif // OSEK_TASK_DEBUG
 #endif // GETEVENT_TEST
 	static bool toggle_bit;
 	if (toggle_bit) {
@@ -246,7 +237,7 @@ TASK(Task_B) {
 	else {
 		Dio_WriteChannel(17, STD_LOW);
 		toggle_bit = true;
-		printf("Task B toggle_bit set\n");
+		LOG_DBG("Task B toggle_bit set");
 	}
 
 }
@@ -254,9 +245,6 @@ TASK(Task_B) {
 
 
 TASK(Task_C) {
-#ifdef OSEK_TASK_DEBUG
-	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
-#endif
 #ifdef EVENT_SET_CLEAR_TEST
 	uint32_t Event = 1;
 	static int setcnt = 4;
@@ -275,16 +263,11 @@ TASK(Task_C) {
 
 
 void Alarm_uSecAlarm_callback(void) {
-#ifdef OSEK_TASK_DEBUG
-	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
-#endif
+	LOG_DBG("Alarm_uSecAlarm_callback() got called!");
 }
 
 
 TASK(Task_D) {
-#ifdef OSEK_TASK_DEBUG
-	pr_log("%s, sp=0x%08X\n", __func__, _get_stack_ptr());
-#endif
 	Dio_FlipChannel(19);
 	LOG_DBG("Task D called!");
 }
