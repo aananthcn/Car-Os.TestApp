@@ -16,17 +16,19 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(namma_test_app, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(namma_test_app, LOG_LEVEL_NONE);
 
 // #define OSEK_TASK_DEBUG	1
-// #define ENC28J60_DEBUG	1
+//#define SCHEDULE_TEST
+//#define TERMINATE_TASK_TEST
+//#define CHAINTASK_TEST
 
 #define GETEVENT_TEST
 #define EVENT_SET_CLEAR_TEST
 //#define GET_RELEASE_RESOURCE_TEST
-//#define SCHEDULE_TEST
-//#define TERMINATE_TASK_TEST
-//#define CHAINTASK_TEST
+
+// #define ENC28J60_DEBUG	1
+//#define ETH_LOW_LEVEL_SEND_RECV_TEST 0
 
 
 /*#############*/
@@ -62,10 +64,12 @@ void send_arp_pkt(void) {
 
 #define RECV_PKT_SZ	(1522)
 void macphy_test(void) {
+#if ETH_LOW_LEVEL_SEND_RECV_TEST
 	uint16 phy_reg;
 	uint16 rx_dlen;
 	uint8 reg_data;
 	uint8 eth_data[RECV_PKT_SZ];
+#endif
 
 
 #if ETH_DRIVER_MAX_CHANNEL > 0
@@ -88,7 +92,6 @@ void macphy_test(void) {
   #endif
  #endif
 
- #define ETH_LOW_LEVEL_SEND_RECV_TEST 0
  #if ETH_LOW_LEVEL_SEND_RECV_TEST
 	// mem read / write tests
 	send_arp_pkt();
@@ -102,9 +105,17 @@ void macphy_test(void) {
 
 
 TASK(Task_A) {
+	static bool toggle_bit;
+
+#if ALARM_BASE_TEST
 	AlarmBaseType info;
+#endif
+#if GET_ALARM_TEST
 	TickType tick_left;
+#endif
+#if SET_REL_ALARM_TEST
 	static bool cycle_started = false;
+#endif
 
 #ifdef ALARM_BASE_TEST
 	if (E_OK == GetAlarmBase(0, &info))
@@ -169,8 +180,9 @@ TASK(Task_A) {
 	LOG_DBG("Task: %d, state = %d", task, state);
 #endif
 
-	static bool toggle_bit;
+#ifdef OSEK_TASK_DEBUG
 	EventMaskType Event = 0;
+#endif
 
 #ifdef ENABLE_DISABLE_ISR_TEST
 	DisableAllInterrupts();
