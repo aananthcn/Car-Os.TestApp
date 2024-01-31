@@ -56,8 +56,8 @@ $(info compiling Car_OS_TestApp source files)
 
 
 APP_OBJS := \
-	${Car_Os_TestApp_path}/src/namma_test_app.o \
-	${Car_Os_TestApp_path}/src/ethernet_test_app.o
+	${Car_Os_TestApp_path}/src/os_tasks_test.o \
+	${Car_Os_TestApp_path}/src/ethernet_test.o
 
 
 # LDFLAGS := -g -relocatable

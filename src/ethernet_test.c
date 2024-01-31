@@ -36,8 +36,9 @@ LOG_MODULE_REGISTER(ethernet_test_app, LOG_LEVEL_DBG);
 // 1 = read_eth_register()
 // 2 = read_mac_mii_register()
 // 3 = read_phy_register()
+// 4 = macphy_test() - ARP pkt via ENC28J60 
 // * = TcpIp stack operations
-#define ENC28J60_SPI_TEST 10
+#define ENC28J60_SPI_TEST 4
 
 
 // test-case:1 enc28j60_write_reg(ERXSTH, HI_BYTE(RX_BUF_BEG));
@@ -88,19 +89,131 @@ void read_phy_register(void) {
 }
 
 
+#define ARP_PKT_SZ 64
+void send_arp_pkt(void) {
+	const uint8 brdcst_a[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+	uint8 eth_data[ARP_PKT_SZ];
+	int i, j;
+
+	// destination mac address
+	for (i = 0; i < 6; i++) {
+		eth_data[i] = brdcst_a[i];
+	}
+
+	// source mac address
+	for (j = 0; j < 6; j++, i++) {
+		eth_data[i] = EthConfigs[0].ctrlcfg.mac_addres[j];
+	}
+
+	eth_data[i++] = 0x08; // ARP type = 0x0806
+	eth_data[i++] = 0x06; // ARP type = 0x0806
+
+	// Hardware Type - Ethernet
+	eth_data[i++] = 0x00;
+	eth_data[i++] = 0x01;
+
+	// Protocol Type - IPv4 (0x0800)
+	eth_data[i++] = 0x08;
+	eth_data[i++] = 0x00;
+
+	// Hardware (MAC address) len
+	eth_data[i++] = 0x06;
+
+	// Protocol len / size
+	eth_data[i++] = 0x04;
+
+	// OPER code (operational code)
+	eth_data[i++] = 0x00;
+	eth_data[i++] = 0x01;
+
+	// Sender MAC address
+	for (j = 0; j < 6; j++, i++) {
+		eth_data[i] = EthConfigs[0].ctrlcfg.mac_addres[j];
+	}
+
+	// Sender IP address
+	eth_data[i++] = 192;
+	eth_data[i++] = 168;
+	eth_data[i++] = 3;
+	eth_data[i++] = 111;
+
+	// Target MAC address
+	for (j = 0; j < 6; j++, i++) {
+		eth_data[i] = 0;
+	}
+
+	// Target IP address
+	eth_data[i++] = 192;
+	eth_data[i++] = 168;
+	eth_data[i++] = 3;
+	eth_data[i++] = 1;
+
+	// CRC will be computed by the MAC layer, but fill 0
+	for (j = 0; j < 6; j++, i++) {
+		eth_data[i] = 0;
+	}
+
+	LOG_DBG("Sending ARP packet (len = %d)", i);
+	macphy_pkt_send((uint8*)eth_data, i);
+}
+
+
+#define RECV_PKT_SZ	(1522)
+void macphy_test(void) {
+	uint16 rx_dlen;
+	uint8 eth_data[RECV_PKT_SZ];
+
+
+#if ETH_DRIVER_MAX_CHANNEL > 0
+ #if defined BITOPS_TEST
+	uint8 reg_data;
+
+	// ECON1 register tests
+	enc28j60_bitclr_reg(ECON1, 0x03);
+	reg_data = enc28j60_read_reg(ECON1);
+  #ifdef ENC28J60_DEBUG
+	LOG_DBG("ECON1 after bit clr: 0x%02x", reg_data);
+  #endif
+	enc28j60_write_reg(ECON1, 0x00);
+	reg_data = enc28j60_read_reg(ECON1);
+  #ifdef ENC28J60_DEBUG
+	LOG_DBG("ECON1 after write: 0x%02x", reg_data);
+  #endif
+	enc28j60_bitset_reg(ECON1, 0x03);
+	reg_data = enc28j60_read_reg(ECON1);
+  #ifdef ENC28J60_DEBUG
+	LOG_DBG("ECON1 after bit set: 0x%02x", reg_data);
+  #endif
+ #endif
+
+	// mem read / write tests
+	send_arp_pkt();
+	rx_dlen = macphy_pkt_recv(eth_data, RECV_PKT_SZ);
+	if (0 < rx_dlen) {
+		LOG_DBG("TEST: Received a new Eth packet with size = %d", rx_dlen);
+	}
+#endif
+}
+
+
+
 // Called by Os for every 100 ms
 TASK(Ethernet_Tasks) {
-#if ENC28J60_SPI_TEST == 1
+#if (ETH_DRIVER_MAX_CHANNEL > 0)
+ #if ENC28J60_SPI_TEST == 1
 	read_eth_register();
-#elif ENC28J60_SPI_TEST == 2
+ #elif ENC28J60_SPI_TEST == 2
 	read_mac_mii_register();
-#elif ENC28J60_SPI_TEST == 3
+ #elif ENC28J60_SPI_TEST == 3
 	read_phy_register();
-#else
- #if (ETH_DRIVER_MAX_CHANNEL > 0)
+ #elif ENC28J60_SPI_TEST == 4
+	macphy_test();
+ #else
 	TcpIp_MainFunction();
 	macphy_periodic_fn();
  #endif
+#else
+	LOG_ERR("No ethernet channels configured, hence no tests done!")
 #endif
 	k_sleep(K_SECONDS(1));
 }

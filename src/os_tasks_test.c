@@ -38,70 +38,6 @@ LOG_MODULE_REGISTER(namma_test_app, LOG_LEVEL_NONE);
 /*#############*/
 
 
-#define ARP_PKT_SZ 14
-void send_arp_pkt(void) {
-	const uint8 brdcst_a[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-	uint8 eth_data[ARP_PKT_SZ];
-	int i, j;
-
-	// destination mac address
-	for (i = 0; i < 6; i++) {
-		eth_data[i] = brdcst_a[i];
-	}
-
-	// source mac address
-	for (j = 0; j < 6; j++) {
-		eth_data[i+j] = EthConfigs[0].ctrlcfg.mac_addres[j];
-	}
-	i += j;
-
-	eth_data[i++] = 0x08; // ARP type = 0x0806
-	eth_data[i++] = 0x06; // ARP type = 0x0806
-
-	macphy_pkt_send((uint8*)eth_data, ARP_PKT_SZ);
-}
-
-
-#define RECV_PKT_SZ	(1522)
-void macphy_test(void) {
-#if ETH_LOW_LEVEL_SEND_RECV_TEST
-	uint16 phy_reg;
-	uint16 rx_dlen;
-	uint8 reg_data;
-	uint8 eth_data[RECV_PKT_SZ];
-#endif
-
-
-#if ETH_DRIVER_MAX_CHANNEL > 0
- #if defined BITOPS_TEST
-	// ECON1 register tests
-	enc28j60_bitclr_reg(ECON1, 0x03);
-	reg_data = enc28j60_read_reg(ECON1);
-  #ifdef ENC28J60_DEBUG
-	LOG_DBG("ECON1 after bit clr: 0x%02x", reg_data);
-  #endif
-	enc28j60_write_reg(ECON1, 0x00);
-	reg_data = enc28j60_read_reg(ECON1);
-  #ifdef ENC28J60_DEBUG
-	LOG_DBG("ECON1 after write: 0x%02x", reg_data);
-  #endif
-	enc28j60_bitset_reg(ECON1, 0x03);
-	reg_data = enc28j60_read_reg(ECON1);
-  #ifdef ENC28J60_DEBUG
-	LOG_DBG("ECON1 after bit set: 0x%02x", reg_data);
-  #endif
- #endif
-
- #if ETH_LOW_LEVEL_SEND_RECV_TEST
-	// mem read / write tests
-	send_arp_pkt();
-	rx_dlen = macphy_pkt_recv(eth_data, RECV_PKT_SZ);
-	if (0 < rx_dlen) {
-		LOG_DBG("TEST: Received a new Eth packet with size = %d", rx_dlen);
-	}
- #endif
-#endif
-}
 
 
 TASK(Task_A) {
@@ -193,9 +129,6 @@ TASK(Task_A) {
 	if (toggle_bit) {
 		Dio_WriteChannel(16, STD_HIGH);
 		toggle_bit = false;
-#ifdef ETHERNET_TEST
-		macphy_test();
-#endif
 #ifdef OSEK_TASK_DEBUG
 		LOG_DBG("Task A: Triggered event for Task B");
 #endif
