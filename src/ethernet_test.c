@@ -36,9 +36,10 @@ LOG_MODULE_REGISTER(ethernet_test_app, LOG_LEVEL_DBG);
 // 1 = read_eth_register()
 // 2 = read_mac_mii_register()
 // 3 = read_phy_register()
-// 4 = macphy_test() - ARP pkt via ENC28J60 
+// 4 = macphy_test() - ENC28J60
+// 5 = send_arp_pkt()
 // * = TcpIp stack operations
-#define ENC28J60_SPI_TEST 4
+#define ENC28J60_SPI_TEST 5
 
 
 // test-case:1 enc28j60_write_reg(ERXSTH, HI_BYTE(RX_BUF_BEG));
@@ -89,6 +90,25 @@ void read_phy_register(void) {
 }
 
 
+// test-case:4 bit operations on MACPHY registers
+void macphy_test(void) {
+	uint8 reg_data;
+
+	// ECON1 register tests
+	enc28j60_bitclr_reg(ECON1, 0x03);
+	reg_data = enc28j60_read_reg(ECON1);
+	LOG_DBG("ECON1 after bit clr: 0x%02x", reg_data);
+	enc28j60_write_reg(ECON1, 0x00);
+	reg_data = enc28j60_read_reg(ECON1);
+	LOG_DBG("ECON1 after write: 0x%02x", reg_data);
+	enc28j60_bitset_reg(ECON1, 0x03);
+	reg_data = enc28j60_read_reg(ECON1);
+	LOG_DBG("ECON1 after bit set: 0x%02x", reg_data);
+}
+
+
+
+// test-case:5  sending ARP packet periodically
 #define ARP_PKT_SZ 64
 void send_arp_pkt(void) {
 	const uint8 brdcst_a[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
@@ -105,8 +125,9 @@ void send_arp_pkt(void) {
 		eth_data[i] = EthConfigs[0].ctrlcfg.mac_addres[j];
 	}
 
-	eth_data[i++] = 0x08; // ARP type = 0x0806
-	eth_data[i++] = 0x06; // ARP type = 0x0806
+	// ARP type = 0x0806
+	eth_data[i++] = 0x08;
+	eth_data[i++] = 0x06;
 
 	// Hardware Type - Ethernet
 	eth_data[i++] = 0x00;
@@ -158,44 +179,6 @@ void send_arp_pkt(void) {
 }
 
 
-#define RECV_PKT_SZ	(1522)
-void macphy_test(void) {
-	uint16 rx_dlen;
-	uint8 eth_data[RECV_PKT_SZ];
-
-
-#if ETH_DRIVER_MAX_CHANNEL > 0
- #if defined BITOPS_TEST
-	uint8 reg_data;
-
-	// ECON1 register tests
-	enc28j60_bitclr_reg(ECON1, 0x03);
-	reg_data = enc28j60_read_reg(ECON1);
-  #ifdef ENC28J60_DEBUG
-	LOG_DBG("ECON1 after bit clr: 0x%02x", reg_data);
-  #endif
-	enc28j60_write_reg(ECON1, 0x00);
-	reg_data = enc28j60_read_reg(ECON1);
-  #ifdef ENC28J60_DEBUG
-	LOG_DBG("ECON1 after write: 0x%02x", reg_data);
-  #endif
-	enc28j60_bitset_reg(ECON1, 0x03);
-	reg_data = enc28j60_read_reg(ECON1);
-  #ifdef ENC28J60_DEBUG
-	LOG_DBG("ECON1 after bit set: 0x%02x", reg_data);
-  #endif
- #endif
-
-	// mem read / write tests
-	send_arp_pkt();
-	rx_dlen = macphy_pkt_recv(eth_data, RECV_PKT_SZ);
-	if (0 < rx_dlen) {
-		LOG_DBG("TEST: Received a new Eth packet with size = %d", rx_dlen);
-	}
-#endif
-}
-
-
 
 // Called by Os for every 100 ms
 TASK(Ethernet_Tasks) {
@@ -208,6 +191,8 @@ TASK(Ethernet_Tasks) {
 	read_phy_register();
  #elif ENC28J60_SPI_TEST == 4
 	macphy_test();
+ #elif ENC28J60_SPI_TEST == 5
+	send_arp_pkt();
  #else
 	TcpIp_MainFunction();
 	macphy_periodic_fn();
