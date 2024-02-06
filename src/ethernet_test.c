@@ -38,13 +38,13 @@ LOG_MODULE_REGISTER(ethernet_test_app, LOG_LEVEL_DBG);
 // 3 = read_phy_register()
 // 4 = macphy_test() - ENC28J60
 // 5 = send_arp_pkt()
-// * = TcpIp stack operations
-#define ENC28J60_SPI_TEST 5
+// * = only TcpIp stack operations
+#define ENC28J60_SPI_TEST 0
 
 
 // test-case:1 enc28j60_write_reg(ERXSTH, HI_BYTE(RX_BUF_BEG));
 void read_eth_register(void) {
-	static u8 rd_ptr_l;
+	u8 rd_ptr_l;
 
 	// After reset the value @ERDPTL must be == 0xFA
 	rd_ptr_l = enc28j60_read_reg(ERDPTL);
@@ -55,7 +55,7 @@ void read_eth_register(void) {
 // test-case:2 enc28j60_write_reg(MACON1, MACON1_MARXEN | MACON1_TXPAUS | MACON1_RXPAUS);
 // expected value: 0x00
 void read_mac_mii_register(void) {
-	static u8 m_reg;
+	u8 m_reg;
 
 	// If initialized as above, MACON1 should contain 0b0000_1101 = 0x0D, but 0x00 is the Read value
 	m_reg = enc28j60_read_reg(MACON1);
@@ -67,11 +67,14 @@ void read_mac_mii_register(void) {
 }
 
 
+static uint16 phid1; 
+static uint16 phid2;
+
 // test-case:3 just read PHID1 and PHID2 and print PHY ID and REV.ID of the device. 
 void read_phy_register(void) {
-        static uint16 phid1, phid2;
-	static uint32 phy_id;
-	static uint8 phy_rev;
+	uint32 phy_id;
+	uint16 phy_reg;
+	uint8 phy_rev;
 
 	phy_id = 0;
 	phy_rev = 0;
@@ -87,6 +90,9 @@ void read_phy_register(void) {
 
         phy_rev = (uint8) phid2 & 0x0F;
         LOG_DBG("PHY RevID: 0x%02x", phy_rev);
+
+	phy_reg = enc28j60_read_phy(PHSTAT1);
+	LOG_DBG("PHSTAT1: 0x%04x", phy_reg);
 }
 
 
@@ -167,7 +173,7 @@ void send_arp_pkt(void) {
 	eth_data[i++] = 192;
 	eth_data[i++] = 168;
 	eth_data[i++] = 3;
-	eth_data[i++] = 1;
+	eth_data[i++] = 10;
 
 	// CRC will be computed by the MAC layer, but fill 0
 	for (j = 0; j < 6; j++, i++) {
@@ -183,6 +189,7 @@ void send_arp_pkt(void) {
 // Called by Os for every 100 ms
 TASK(Ethernet_Tasks) {
 #if (ETH_DRIVER_MAX_CHANNEL > 0)
+
  #if ENC28J60_SPI_TEST == 1
 	read_eth_register();
  #elif ENC28J60_SPI_TEST == 2
@@ -193,12 +200,12 @@ TASK(Ethernet_Tasks) {
 	macphy_test();
  #elif ENC28J60_SPI_TEST == 5
 	send_arp_pkt();
- #else
+ #endif
+
 	TcpIp_MainFunction();
 	macphy_periodic_fn();
- #endif
 #else
 	LOG_ERR("No ethernet channels configured, hence no tests done!")
 #endif
-	k_sleep(K_SECONDS(1));
+	k_sleep(K_MSEC(500));
 }
