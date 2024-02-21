@@ -185,6 +185,8 @@ void send_arp_pkt(void) {
 }
 
 
+void tcp_socket_main(void);
+
 
 // Called by Os for every 100 ms
 TASK(Ethernet_Tasks) {
@@ -204,6 +206,7 @@ TASK(Ethernet_Tasks) {
 
 	TcpIp_MainFunction();
 	macphy_periodic_fn();
+	tcp_socket_main();
 #else
 	LOG_ERR("No ethernet channels configured, hence no tests done!")
 #endif

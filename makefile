@@ -57,6 +57,7 @@ $(info compiling Car_OS_TestApp source files)
 
 APP_OBJS := \
 	${Car_Os_TestApp_path}/src/os_tasks_test.o \
+	${Car_Os_TestApp_path}/src/tcp_server_socket.o \
 	${Car_Os_TestApp_path}/src/ethernet_test.o
 
 
