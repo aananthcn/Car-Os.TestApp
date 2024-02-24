@@ -48,6 +48,7 @@ INCDIRS  += -I ${Car_Os_TestApp_path}/src \
 	    -I ${ETH_PATH}/cfg \
 	    -I ${ETH_PATH}/src/macphy \
 	    -I ${TCPIP_PATH}/api \
+	    -I ${TCPIP_PATH}/src \
 	    -I ${TCPIP_PATH}/cfg
 
 
