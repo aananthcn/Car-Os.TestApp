@@ -25,13 +25,6 @@
 #include <string.h>
 
 
-enum {
-	TCP_CLOSED,
-	TCP_BIND,
-	TCP_LISTEN,
-	TCP_ACCEPT
-};
-
 static u8 TcpState = TCP_CLOSED;
 
 
