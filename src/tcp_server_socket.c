@@ -2,7 +2,7 @@
  * Created on Wed Feb 21 2024 10:33:56 AM
  *
  * The MIT License (MIT)
- * Copyright (c) 2024 Aananth C N
+ * Copyright (c) 2024 Aananth C N, Krishnaswamy D
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -19,78 +19,67 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <TcpIp.h>
-#include <tcpip_extensions.h>
+#include <socket.h>
 
 #include <string.h>
 
+typedef enum server_sock_state {
+	SERVER_SOCK_STATE_INIT 		= 0,
+	SERVER_SOCK_STATE_BIND 		= 1,
+	SERVER_SOCK_STATE_LISTEN 	= 2,
+	SERVER_SOCK_STATE_ACCEPT 	= 3,
+	SERVER_SOCK_STATE_LOOP 		= 4
+} server_sock_state_t;
 
-static u8 TcpState = TCP_CLOSED;
-
-
-// initialize server socket to start a comm. session
-int tcp_socket_init(void) {
-	int retval = -1; // initialization is not complete
-	uint16 port = 1000; // change this if you want.
-	Std_ReturnType tcp_retstat;
-
-
-	// bind socket to ip address and port
-	if (TcpState == TCP_CLOSED) {
-		tcp_retstat = TcpIp_Bind(0, 0, &port);
-		if (tcp_retstat == E_OK) {
-			TcpState = TCP_BIND;
-		}
-	}
-
-	// listen to incoming connections; accept will happen within TcpIp module
-	if ((TcpState == TCP_BIND) || (TcpState == TCP_LISTEN)) {
-		tcp_retstat = TcpIp_TcpListen(0, 0); // call once, this will return immediately, but an accept call back will be called.
-		if (tcp_retstat == E_OK)  {
-			TcpState = TCP_ACCEPT;
-		}
-		else {
-			TcpState = TCP_LISTEN;
-		}
-	}
-
-	// check if initialization is complete
-	if (TcpState == TCP_ACCEPT) {
-		retval = 0; // initialization is complete
-	}
-
-	return retval;
-}
-
+server_sock_state_t state = SERVER_SOCK_STATE_INIT;
 
 // This function is cyclically called from the Ethernet_Tasks defined in ethernet_test.c
 //
 // This is basically a different form of Echo server, which will first expect some data
 // to be sent by a client, so that it can respond to it.
-void tcp_socket_main(void) {
+void tcp_server_socket_main(void) {
 	uint8_t eth_data[1500];
 	int data_len;
 	char reply[] = "Car-OS # Hey \"tcp_client\", you sent me: \"";
 	uint8_t reply_len;
-
 
 	// frame a response on the same mem buffer
 	strcpy(eth_data, reply);
 	reply_len = strlen(reply);
 
 	// initialize socket if it isn't initialized
-	if (TcpState < TCP_ACCEPT) {
-		tcp_socket_init();
+	if(SERVER_SOCK_STATE_INIT == state) {
+		if (0 != socket(0)) {
+			state = SERVER_SOCK_STATE_BIND;
+		}
 	}
 
-	// cyclically receive and send on an initialized socket
-	if (TcpState >= TCP_ACCEPT) {
-		data_len = TcpIp_recv(eth_data+reply_len);
+	if(SERVER_SOCK_STATE_BIND == state) {
+		if(0 != bind(0)) {
+			state = SERVER_SOCK_STATE_LISTEN;
+		}
+	}
+
+	if(SERVER_SOCK_STATE_LISTEN == state) {
+		if(0 != listen(0)) {
+			state = SERVER_SOCK_STATE_ACCEPT;
+		}
+	}
+
+	if(SERVER_SOCK_STATE_ACCEPT == state) {
+		if(0 == accept(0)) {
+			state = SERVER_SOCK_STATE_LOOP;
+		}
+	}
+
+	if(SERVER_SOCK_STATE_LOOP == state) {
+		// cyclically receive and send on an initialized socket
+		data_len = recv(0, eth_data, 1500);
 
 		// do an echo with a Car-OS reply!
 		eth_data[data_len+reply_len] = '\"';
 		if(data_len > 0) {
-			TcpIp_send(eth_data, data_len+reply_len+1);
+			send(0, eth_data, data_len+reply_len+1);
 		}
 	}
 }
